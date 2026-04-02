@@ -1,7 +1,14 @@
+using ABC_Retailers_CLDV.Models;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+
+builder.Services.AddSingleton<TableService>();
+builder.Services.AddSingleton<BlobService>();
+builder.Services.AddSingleton<QueueService>();
+builder.Services.AddSingleton<FileService>();
 
 var app = builder.Build();
 

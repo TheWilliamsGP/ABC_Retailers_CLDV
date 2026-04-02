@@ -1,0 +1,37 @@
+﻿@model IEnumerable<Customer>
+
+@{
+    ViewData["Title"] = "Customers";
+}
+
+<div class="container mt-4">
+
+    <h2 class="mb-3">Customer List</h2>
+
+    <a asp-action="Create" class="btn btn-primary mb-3">
+        Add New Customer
+    </a>
+
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Date Added</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var customer in Model)
+            {
+                <tr>
+                    <td>@customer.Name</td>
+                    <td>@customer.Email</td>
+                    <td>@customer.AddedDate.ToString("yyyy-MM-dd HH:mm")</td>
+                </tr>
+            }
+        </tbody>
+
+    </table>
+
+</div>
