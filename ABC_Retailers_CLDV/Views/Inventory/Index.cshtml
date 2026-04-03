@@ -1,0 +1,40 @@
+﻿@model IEnumerable<Product>
+
+<div class="container mt-4">
+    <h2>Inventory Management</h2>
+
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>Image</th>
+                <th>Name</th>
+                <th>Description</th>
+                <th>Category</th>
+                <th>Price</th>
+                <th>Stock</th>
+                <th>Availability</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var product in Model)
+            {
+                <tr>
+                    <td>
+                        <img src="@product.ImageUrl" style="height:80px; object-fit:cover;" />
+                    </td>
+                    <td>@product.Name</td>
+                    <td>@product.Description</td>
+                    <td>@product.Category</td>
+                    <td>R @product.Price</td>
+                    <td>@product.Stock</td>
+                    <td>@(product.IsAvailable ? "Available" : "Out of Stock")</td>
+                    <td>
+                        <a asp-action="Edit" asp-route-id="@product.RowKey" class="btn btn-sm btn-warning">Edit</a>
+                        <a asp-action="Delete" asp-route-id="@product.RowKey" class="btn btn-sm btn-danger" onclick="return confirm('Are you sure?')">Delete</a>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

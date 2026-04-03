@@ -1,0 +1,58 @@
+﻿@model Product
+
+<div class="container mt-4">
+    <h2>Edit Inventory Item</h2>
+
+    <form method="post" enctype="multipart/form-data">
+        <input type="hidden" asp-for="RowKey" />
+        <input type="hidden" asp-for="PartitionKey" />
+        <input type="hidden" asp-for="ETag" />
+        <input type="hidden" asp-for="ImageUrl" />
+
+        @if (!string.IsNullOrEmpty(Model.ImageUrl))
+        {
+            <img src="@Model.ImageUrl" style="height:150px; object-fit:cover;" class="mb-2" />
+        }
+
+        <div class="mb-3">
+            <label>Name</label>
+            <input asp-for="Name" class="form-control" />
+        </div>
+
+        <div class="mb-3">
+            <label>Description</label>
+            <textarea asp-for="Description" class="form-control"></textarea>
+        </div>
+
+        <div class="mb-3">
+            <label>Category</label>
+            <input asp-for="Category" class="form-control" />
+        </div>
+
+        <div class="row">
+            <div class="col-md-4">
+                <label>Price</label>
+                <input asp-for="Price" class="form-control" />
+            </div>
+            <div class="col-md-4">
+                <label>Stock</label>
+                <input asp-for="Stock" class="form-control" />
+            </div>
+            <div class="col-md-4">
+                <label>Availability</label>
+                <select asp-for="IsAvailable" class="form-control">
+                    <option value="true">Available</option>
+                    <option value="false">Out of Stock</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="mb-3">
+            <label>Upload New Image (optional)</label>
+            <input type="file" name="image" class="form-control" />
+        </div>
+
+        <button class="btn btn-success mt-3">Update</button>
+        <a asp-action="Index" class="btn btn-secondary mt-3">Cancel</a>
+    </form>
+</div>
