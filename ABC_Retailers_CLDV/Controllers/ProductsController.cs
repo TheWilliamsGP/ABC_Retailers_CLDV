@@ -47,5 +47,42 @@ namespace ABC_Retailers_CLDV.Controllers
 
             return RedirectToAction("Index");
         }
+        public IActionResult Edit(string id)
+        {
+            var product = _tableClient.GetEntity<Product>("Product", id).Value;
+            return View(product);
+        }
+        [HttpPost]
+        public async Task<IActionResult> Edit(Product product, IFormFile image)
+        {
+            product.PartitionKey = "Product";
+
+            // 1️⃣ Get the existing entity from Table
+            var existing = _tableClient.GetEntity<Product>("Product", product.RowKey).Value;
+
+            // 2️⃣ Preserve ImageUrl if no new image uploaded
+            if (image != null)
+            {
+                // Upload new image to Blob
+                var imageUrl = await _blobService.UploadFileAsync(image, "product-images");
+                product.ImageUrl = imageUrl;
+            }
+            else
+            {
+                // Keep the old image
+                product.ImageUrl = existing.ImageUrl;
+            }
+
+            // 3️⃣ Update Table
+            _tableClient.UpdateEntity(product, Azure.ETag.All, TableUpdateMode.Replace);
+
+            return RedirectToAction("Index");
+        }
+
+        public IActionResult Delete(string id)
+        {
+            _tableClient.DeleteEntity("Product", id);
+            return RedirectToAction("Index");
+        }
     }
 }
