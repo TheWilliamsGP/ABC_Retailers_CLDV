@@ -1,33 +1,31 @@
-﻿using Azure.Storage.Files.Shares;
+﻿using Azure;
+using Azure.Storage.Files.Shares;
 
-namespace ABC_Retailers_CLDV.Models
+public class FileService
 {
-    public class FileService
+    private readonly ShareServiceClient _shareServiceClient;
+
+    public FileService(IConfiguration configuration)
     {
-        private readonly ShareServiceClient _client;
+        _shareServiceClient = new ShareServiceClient(configuration["AzureStorage:ConnectionString"]);
+    }
 
-        public FileService(IConfiguration config)
-        {
-            _client = new ShareServiceClient(config["AzureStorage:ConnectionString"]);
-        }
+    public ShareClient GetShare(string shareName)
+    {
+        var share = _shareServiceClient.GetShareClient(shareName);
+        share.CreateIfNotExists();
+        return share;
+    }
 
-        public ShareClient GetShare(string shareName)
+    public async Task UploadLogAsync(string shareName, string fileName, string content)
+    {
+        var share = GetShare(shareName);
+        var root = share.GetRootDirectoryClient();
+        var file = root.GetFileClient(fileName);
+        using (var ms = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(content)))
         {
-            var share = _client.GetShareClient(shareName);
-            share.CreateIfNotExists();
-            return share;
-        }
-
-        public async Task UploadLogAsync(string shareName, string fileName, string content)
-        {
-            var share = GetShare(shareName);
-            var root = share.GetRootDirectoryClient();
-            var file = root.GetFileClient(fileName);
-            using (var ms = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(content)))
-            {
-                await file.CreateAsync(ms.Length);
-                await file.UploadRangeAsync(new Azure.HttpRange(0, ms.Length), ms);
-            }
+            await file.CreateAsync(ms.Length);
+            await file.UploadRangeAsync(new HttpRange(0, ms.Length), ms);
         }
     }
 }

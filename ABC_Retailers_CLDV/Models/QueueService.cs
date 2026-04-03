@@ -1,27 +1,24 @@
 ﻿using Azure.Storage.Queues;
 
-namespace ABC_Retailers_CLDV.Models
+public class QueueService
 {
-    public class QueueService
+    private readonly QueueServiceClient _queueServiceClient;
+
+    public QueueService(IConfiguration configuration)
     {
-        private readonly QueueServiceClient _client;
+        _queueServiceClient = new QueueServiceClient(configuration["AzureStorage:ConnectionString"]);
+    }
 
-        public QueueService(IConfiguration config)
-        {
-            _client = new QueueServiceClient(config["AzureStorage:ConnectionString"]);
-        }
+    public QueueClient GetQueue(string queueName)
+    {
+        var queue = _queueServiceClient.GetQueueClient(queueName);
+        queue.CreateIfNotExists();
+        return queue;
+    }
 
-        public QueueClient GetQueue(string queueName)
-        {
-            var queue = _client.GetQueueClient(queueName);
-            queue.CreateIfNotExists();
-            return queue;
-        }
-
-        public void SendMessage(string queueName, string message)
-        {
-            var queue = GetQueue(queueName);
-            queue.SendMessage(message);
-        }
+    public void SendMessage(string queueName, string message)
+    {
+        var queue = GetQueue(queueName);
+        queue.SendMessage(message);
     }
 }

@@ -1,5 +1,6 @@
 ﻿using ABC_Retailers_CLDV.Models;
 using Azure.Data.Tables;
+using Azure.Storage.Queues.Models;
 using Microsoft.AspNetCore.Mvc;
 
 namespace ABC_Retailers_CLDV.Controllers
@@ -8,27 +9,36 @@ namespace ABC_Retailers_CLDV.Controllers
     {
         private readonly TableClient _tableClient;
         private readonly TableClient _productsTable;
+        private readonly QueueService _queueService;
+        private readonly FileService _fileService;
 
-        public OrdersController(TableService tableService)
+        public OrdersController(TableService tableService, QueueService queueService, FileService fileService)
         {
             _tableClient = tableService.GetTable("Orders");
-            _productsTable = tableService.GetTable("Products"); // for price lookup
+            _productsTable = tableService.GetTable("Products");
+            _queueService = queueService;
+            _fileService = fileService;
         }
 
         // GET: Orders/Create
         public IActionResult Create()
         {
-            // Load all products for dropdown
             var products = _productsTable.Query<Product>().ToList();
-            ViewBag.Products = products;
+            ViewBag.Products = products ?? new List<Product>(); // prevent null
             return View();
         }
 
         // POST: Orders/Create
+
         [HttpPost]
-        public IActionResult Create(string customerName, string productName, int quantity)
+        public async Task<IActionResult> Create(string customerName, string productName, int quantity)
         {
-            // Get product price
+            if (string.IsNullOrEmpty(customerName) || string.IsNullOrEmpty(productName))
+            {
+                TempData["Error"] = "Missing data";
+                return RedirectToAction("Create");
+            }
+
             var product = _productsTable.Query<Product>(p => p.Name == productName).FirstOrDefault();
             if (product == null)
             {
@@ -36,11 +46,13 @@ namespace ABC_Retailers_CLDV.Controllers
                 return RedirectToAction("Create");
             }
 
+            var orderId = Guid.NewGuid().ToString();
             double totalAmount = product.Price * quantity;
 
             var order = new Order
             {
-                RowKey = Guid.NewGuid().ToString(),
+                PartitionKey = "Orders",
+                RowKey = orderId,
                 CustomerName = customerName,
                 ProductName = productName,
                 Quantity = quantity,
@@ -51,24 +63,25 @@ namespace ABC_Retailers_CLDV.Controllers
 
             _tableClient.AddEntity(order);
 
+            // Queue message
+            string message = $"OrderId:{orderId}, Product:{productName}, Qty:{quantity}, Customer:{customerName}";
+            _queueService.SendMessage("orderqueue", message);
+
+            // ✅ Write log to File Share (async)
+            string logContent = $"OrderId:{orderId}, Customer:{customerName}, Product:{productName}, Quantity:{quantity}, Total:{totalAmount}, Date:{DateTime.UtcNow}";
+            await _fileService.UploadLogAsync("logs", $"order-{orderId}.txt", logContent);
+
             return RedirectToAction("Index");
         }
 
         // GET: Orders/Index
         public IActionResult Index()
         {
-            var orders = _tableClient.Query<Order>().OrderByDescending(o => o.OrderDateTime).ToList();
-            return View(orders);
-        }
+            var orders = _tableClient.Query<Order>()
+                .OrderByDescending(o => o.OrderDateTime)
+                .ToList();
 
-        // Optional: Update status to Delivered
-        public IActionResult Deliver(string id)
-        {
-            var order = _tableClient.GetEntity<Order>("Order", id).Value;
-            order.Status = "Delivered";
-            _tableClient.UpdateEntity(order, Azure.ETag.All, TableUpdateMode.Replace);
-            return RedirectToAction("Index");
+            return View(orders);
         }
     }
 }
-

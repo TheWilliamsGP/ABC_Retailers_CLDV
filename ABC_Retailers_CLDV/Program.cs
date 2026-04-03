@@ -10,6 +10,7 @@ builder.Services.AddSingleton<BlobService>();
 builder.Services.AddSingleton<QueueService>();
 builder.Services.AddSingleton<FileService>();
 
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
