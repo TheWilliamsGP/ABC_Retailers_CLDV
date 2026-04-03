@@ -1,0 +1,37 @@
+﻿@{
+    ViewData["Title"] = "Place Order";
+}
+
+<div class="container mt-4">
+    <h2>Place New Order</h2>
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger">@TempData["Error"]</div>
+    }
+
+    <form method="post">
+        <div class="mb-3">
+            <label>Customer Name</label>
+            <input type="text" name="customerName" class="form-control" required />
+        </div>
+
+        <div class="mb-3">
+            <label>Product</label>
+            <select name="productName" class="form-control" required>
+                <option value="">-- Select Product --</option>
+                @foreach (var product in ViewBag.Products)
+                {
+                    <option value="@product.Name">@product.Name</option>
+                }
+            </select>
+        </div>
+
+        <div class="mb-3">
+            <label>Quantity</label>
+            <input type="number" name="quantity" class="form-control" min="1" value="1" required />
+        </div>
+
+        <button type="submit" class="btn btn-success">Place Order</button>
+    </form>
+</div>
