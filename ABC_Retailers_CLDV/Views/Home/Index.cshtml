@@ -1,8 +1,35 @@
 ﻿@{
-    ViewData["Title"] = "Home Page";
+    ViewData["Title"] = "ABC Retail - Home";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="container mt-5">
+    <div class="text-center mb-4">
+        <h1>Welcome to ABC Retail</h1>
+        <p class="lead">
+            Your one-stop online shop for all your needs. Fast, reliable, and scalable cloud-powered retail experience.
+        </p>
+        <a href="@Url.Action("Index", "Products")" class="btn btn-primary btn-lg">Browse Products</a>
+    </div>
+
+    <div class="row mt-5">
+        <div class="col-md-4 text-center">
+            <i class="fas fa-box fa-3x mb-3"></i>
+            <h4>Real-time Order Processing</h4>
+            <p>Orders are processed instantly with cloud-based table storage, queues, and file logs for full reliability.</p>
+        </div>
+        <div class="col-md-4 text-center">
+            <i class="fas fa-cloud fa-3x mb-3"></i>
+            <h4>Scalable Cloud Infrastructure</h4>
+            <p>Our system grows with your business using Azure Storage Services and cloud-native scalability.</p>
+        </div>
+        <div class="col-md-4 text-center">
+            <i class="fas fa-chart-line fa-3x mb-3"></i>
+            <h4>Advanced Analytics</h4>
+            <p>Get actionable insights from real-time data to improve operations and customer experience.</p>
+        </div>
+    </div>
+
+    <div class="text-center mt-5">
+        <a href="@Url.Action("Contact", "Home")" class="btn btn-outline-secondary btn-lg">Contact Us</a>
+    </div>
 </div>

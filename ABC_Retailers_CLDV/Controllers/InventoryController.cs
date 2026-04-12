@@ -10,54 +10,85 @@ namespace ABC_Retailers_CLDV.Controllers
         private readonly BlobService _blobService;
         public InventoryController(TableService tableService, BlobService blobService)
         {
-            // Reference your Products Table
             _productsTable = tableService.GetTable("Products");
             _blobService = blobService;
         }
 
-        // GET: Inventory
+        //Displays a list of all products in inventory
         public IActionResult Index()
         {
-            var products = _productsTable.Query<Product>().ToList();
-            return View(products);
+            try
+            {
+                var products = _productsTable.Query<Product>().ToList();
+                return View(products);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Error loading inventory: " + ex.Message;
+                return View(new List<Product>());
+            }
         }
 
-        // GET: Inventory/Edit/{id}
+        //Displays the Edit form for a specific product
         public IActionResult Edit(string id)
         {
-            var product = _productsTable.GetEntity<Product>("Product", id).Value;
-            return View(product);
+            try
+            {
+                var product = _productsTable.GetEntity<Product>("Product", id).Value;
+                return View(product);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Error loading product: " + ex.Message;
+                return RedirectToAction("Index");
+            }
         }
 
-        // POST: Inventory/Edit
+        //Handles form submission for updating product details
         [HttpPost]
         public async Task<IActionResult> Edit(Product product, IFormFile image)
         {
-            product.PartitionKey = "Product";
-
-            // Preserve old image if no new upload
-            var existing = _productsTable.GetEntity<Product>("Product", product.RowKey).Value;
-
-            if (image != null)
+            try
             {
-                var imageUrl = await _blobService.UploadFileAsync(image, "product-images");
-                product.ImageUrl = imageUrl;
+                product.PartitionKey = "Product";
+
+                //Keep old image if no new upload
+                var existing = _productsTable.GetEntity<Product>("Product", product.RowKey).Value;
+
+                if (image != null)
+                {
+                    var imageUrl = await _blobService.UploadFileAsync(image, "product-images");
+                    product.ImageUrl = imageUrl;
+                }
+                else
+                {
+                    product.ImageUrl = existing.ImageUrl;
+                }
+
+                _productsTable.UpdateEntity(product, Azure.ETag.All, TableUpdateMode.Replace);
+
+                return RedirectToAction("Index");
             }
-            else
+            catch (Exception ex)
             {
-                product.ImageUrl = existing.ImageUrl;
+                TempData["Error"] = "Error updating product: " + ex.Message;
+                return RedirectToAction("Index");
             }
-
-            _productsTable.UpdateEntity(product, Azure.ETag.All, TableUpdateMode.Replace);
-
-            return RedirectToAction("Index");
         }
 
-        // GET: Inventory/Delete/{id}
+        //Deletes a product from inventory
         public IActionResult Delete(string id)
         {
-            _productsTable.DeleteEntity("Product", id);
-            return RedirectToAction("Index");
+            try
+            {
+                _productsTable.DeleteEntity("Product", id);
+                return RedirectToAction("Index");
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Error deleting product: " + ex.Message;
+                return RedirectToAction("Index");
+            }
         }
     }
 }

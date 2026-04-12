@@ -6,28 +6,46 @@ namespace ABC_Retailers_CLDV.Controllers
 {
     public class ProductsController : Controller
     {
+        // Azure Table Storage client for interacting with the Products table
         private readonly TableClient _tableClient;
+        // Custom Blob service for handling image uploads
         private readonly BlobService _blobService;
 
         public ProductsController(TableService tableService, BlobService blobService)
         {
+
             _tableClient = tableService.GetTable("Products");
             _blobService = blobService;
         }
 
+        // Displays a list of all products
+
         public IActionResult Index()
         {
+            try
+            {
             var products = _tableClient.Query<Product>().ToList();
             return View(products);
+
+            }
+            catch (Exception ex)
+            {
+                
+                ViewBag.Error = "Error loading products: " + ex.Message;
+                return View(new List<Product>());
+            }
         }
 
+        // Displays the Create Product form
         public IActionResult Create() => View();
 
         [HttpPost]
         public async Task<IActionResult> Create(string name, string description, string category, double price, int stock, bool isAvailable, IFormFile image)
         {
-            string imageUrl = null;
-
+            try
+            {
+                string imageUrl = null;
+            // If an image is uploaded, store it in Blob Storage
             if (image != null)
                 imageUrl = await _blobService.UploadFileAsync(image, "product-images");
 
@@ -42,47 +60,16 @@ namespace ABC_Retailers_CLDV.Controllers
                 IsAvailable = isAvailable,
                 ImageUrl = imageUrl
             };
-
+            // Add the product to Azure Table Storage
             _tableClient.AddEntity(product);
 
             return RedirectToAction("Index");
-        }
-        public IActionResult Edit(string id)
-        {
-            var product = _tableClient.GetEntity<Product>("Product", id).Value;
-            return View(product);
-        }
-        [HttpPost]
-        public async Task<IActionResult> Edit(Product product, IFormFile image)
-        {
-            product.PartitionKey = "Product";
-
-            // 1️⃣ Get the existing entity from Table
-            var existing = _tableClient.GetEntity<Product>("Product", product.RowKey).Value;
-
-            // 2️⃣ Preserve ImageUrl if no new image uploaded
-            if (image != null)
-            {
-                // Upload new image to Blob
-                var imageUrl = await _blobService.UploadFileAsync(image, "product-images");
-                product.ImageUrl = imageUrl;
             }
-            else
+            catch (Exception ex)
             {
-                // Keep the old image
-                product.ImageUrl = existing.ImageUrl;
+                ViewBag.Error = "Error creating product: " + ex.Message;
+                return View();
             }
-
-            // 3️⃣ Update Table
-            _tableClient.UpdateEntity(product, Azure.ETag.All, TableUpdateMode.Replace);
-
-            return RedirectToAction("Index");
-        }
-
-        public IActionResult Delete(string id)
-        {
-            _tableClient.DeleteEntity("Product", id);
-            return RedirectToAction("Index");
-        }
+        }  
     }
 }

@@ -11,7 +11,7 @@ namespace ABC_Retailers_CLDV.Models
         public string ProductName { get; set; }
         public int Quantity { get; set; }
         public double TotalAmount { get; set; }
-        public string Status { get; set; } // Placed / Delivered
+        public string Status { get; set; } 
         public DateTime OrderDateTime { get; set; }
 
         // Required for Table Storage

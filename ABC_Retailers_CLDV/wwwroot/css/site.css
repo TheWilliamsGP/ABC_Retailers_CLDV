@@ -1,22 +1,125 @@
-html {
-  font-size: 14px;
-}
+namespace ABC_Retailers_CLDV.Views.Shared {
+    /* Body and general background */
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #cae9ff;
+        color: #1b4965;
+        margin: 0;
+        padding: 0;
+        background: #5fa8d3;
+     
+    }
+    /* Navbar */
+    .navbar {
+        background-color: #1b4965 !important;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
 
-@media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
+        .navbar .navbar-brand,
+        .navbar .nav-link {
+            color: #cae9ff !important;
+            font-weight: 600;
+        }
 
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
+            .navbar .nav-link:hover {
+                color: #62b6cb !important;
+                transition: color 0.3s;
+            }
+    /* Buttons */
+    .btn-primary {
+        background-color: #62b6cb;
+        border-color: #62b6cb;
+        color: #1b4965;
+        font-weight: 500;
+        transition: all 0.3s;
+    }
 
-html {
-  position: relative;
-  min-height: 100%;
-}
+        .btn-primary:hover {
+            background-color: #5fa8d3;
+            border-color: #5fa8d3;
+            color: #fff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
 
-body {
-  margin-bottom: 60px;
+    .btn-outline-secondary {
+        color: #1b4965;
+        border-color: #1b4965;
+        transition: all 0.3s;
+    }
+
+        .btn-outline-secondary:hover {
+            background-color: #1b4965;
+            color: #cae9ff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+    /* Cards / Sections */
+    .card, .container {
+        background-color: #cae9ff;
+        border: 1px solid #5fa8d3;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 20px;
+        transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+    /* Headings */
+    h1, h2, h3, h4 {
+        color: #1b4965;
+    }
+    /* Links */
+    a {
+        color: #62b6cb;
+        text-decoration: none;
+        transition: color 0.3s;
+    }
+
+        a:hover {
+            color: #5fa8d3;
+            text-decoration: none;
+        }
+    /* Forms */
+    .form-control {
+        border: 1px solid #5fa8d3;
+        border-radius: 8px;
+        padding: 8px 12px;
+        transition: all 0.3s;
+    }
+
+        .form-control:focus {
+            border-color: #62b6cb;
+            box-shadow: 0 0 8px #62b6cb;
+        }
+    /* Footer */
+    footer {
+        background-color: #1b4965;
+        color: #cae9ff;
+        padding: 30px 0;
+        text-align: center;
+    }
+    /* Additional enhancements */
+    .container.mt-5 {
+        margin-top: 60px;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    .lead {
+        font-size: 1.2rem;
+        color: #1b4965;
+    }
+
+    .container {
+        background-color: transparent !important;
+    }
 }

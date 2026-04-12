@@ -20,68 +20,92 @@ namespace ABC_Retailers_CLDV.Controllers
             _fileService = fileService;
         }
 
-        // GET: Orders/Create
+        // Displays the Create Order form
         public IActionResult Create()
         {
-            var products = _productsTable.Query<Product>().ToList();
-            ViewBag.Products = products ?? new List<Product>(); // prevent null
-            return View();
+            try
+            {
+                var products = _productsTable.Query<Product>().ToList();
+                ViewBag.Products = products ?? new List<Product>();
+                return View();
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Error loading products: " + ex.Message;
+                return View(new List<Product>());
+            }
         }
 
-        // POST: Orders/Create
-
+        // Handles form submission for creating a new order
         [HttpPost]
         public async Task<IActionResult> Create(string customerName, string productName, int quantity)
         {
-            if (string.IsNullOrEmpty(customerName) || string.IsNullOrEmpty(productName))
+            try
             {
-                TempData["Error"] = "Missing data";
+                if (string.IsNullOrEmpty(customerName) || string.IsNullOrEmpty(productName))
+                {
+                    TempData["Error"] = "Missing data";
+                    return RedirectToAction("Create");
+                }
+                // Retrieve the selected product from Products table
+                var product = _productsTable.Query<Product>(p => p.Name == productName).FirstOrDefault();
+                if (product == null)
+                {
+                    TempData["Error"] = "Product not found!";
+                    return RedirectToAction("Create");
+                }
+
+                var orderId = Guid.NewGuid().ToString();
+                double totalAmount = product.Price * quantity; 
+
+                var order = new Order
+                {
+                    PartitionKey = "Orders",
+                    RowKey = orderId,
+                    CustomerName = customerName,
+                    ProductName = productName,
+                    Quantity = quantity,
+                    TotalAmount = totalAmount,
+                    Status = "Placed",
+                    OrderDateTime = DateTime.UtcNow
+                };
+
+                // Add order to Azure Table Storage
+                _tableClient.AddEntity(order);
+
+                // Create a queue message for order processing
+                string message = $"OrderId:{orderId}, Product:{productName}, Qty:{quantity}, Customer:{customerName}";
+                _queueService.SendMessage("orderqueue", message);
+
+                // Create log content for file storage
+                string logContent = $"OrderId:{orderId}, Customer:{customerName}, Product:{productName}, Quantity:{quantity}, Total:{totalAmount}, Date:{DateTime.UtcNow}";
+                await _fileService.UploadLogAsync("logs", $"order-{orderId}.txt", logContent);
+
+                return RedirectToAction("Index");
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Error creating order: " + ex.Message;
                 return RedirectToAction("Create");
             }
-
-            var product = _productsTable.Query<Product>(p => p.Name == productName).FirstOrDefault();
-            if (product == null)
-            {
-                TempData["Error"] = "Product not found!";
-                return RedirectToAction("Create");
-            }
-
-            var orderId = Guid.NewGuid().ToString();
-            double totalAmount = product.Price * quantity;
-
-            var order = new Order
-            {
-                PartitionKey = "Orders",
-                RowKey = orderId,
-                CustomerName = customerName,
-                ProductName = productName,
-                Quantity = quantity,
-                TotalAmount = totalAmount,
-                Status = "Placed",
-                OrderDateTime = DateTime.UtcNow
-            };
-
-            _tableClient.AddEntity(order);
-
-            // Queue message
-            string message = $"OrderId:{orderId}, Product:{productName}, Qty:{quantity}, Customer:{customerName}";
-            _queueService.SendMessage("orderqueue", message);
-
-            // ✅ Write log to File Share (async)
-            string logContent = $"OrderId:{orderId}, Customer:{customerName}, Product:{productName}, Quantity:{quantity}, Total:{totalAmount}, Date:{DateTime.UtcNow}";
-            await _fileService.UploadLogAsync("logs", $"order-{orderId}.txt", logContent);
-
-            return RedirectToAction("Index");
         }
 
-        // GET: Orders/Index
+        // Displays a list of all orders
         public IActionResult Index()
         {
-            var orders = _tableClient.Query<Order>()
+            try
+            {
+                var orders = _tableClient.Query<Order>()
                 .OrderByDescending(o => o.OrderDateTime)
                 .ToList();
 
-            return View(orders);
+                return View(orders);
+            }
+            catch (Exception ex)
+            {
+                TempData["Error"] = "Error loading orders: " + ex.Message;
+                return View(new List<Order>());
+            }
         }
     }
 }
